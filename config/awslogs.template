@@ -1,0 +1,7 @@
+[{{ path }}]
+file = {{ path }}
+log_group_name = {{ log_group_name }}
+log_stream_name = {hostname}- {{ path }}
+datetime_format = {{ date_format }}
+initial_position = {{ position }}
+encoding = utf-8

@@ -8,6 +8,7 @@ import boto3
 import uuid
 import argparse
 import time
+import re
 
 # global clients for AWS
 g_s3_client = boto3.client("s3")
@@ -18,17 +19,30 @@ g_dynamo_client = boto3.client("dynamodb")
 # additionally takes a flag that will toggle tagging on resources created by this script. (default false)
 parser = argparse.ArgumentParser(description='Bootstrap Terraform Remote Backends')
 parser.add_argument("region")
-parser.add_argument("-t", "--tag", help="Tags bootstrapped resources as being managed by Bootstrap", action="store_false")
+parser.add_argument("--tag", "-t", help="Tags bootstrapped resources as being managed by Bootstrap", action="store_true")
 args = parser.parse_args()
 
 def create_bucket(region):
     response = g_s3_client.create_bucket(
         ACL='private',
-        Bucket='bootstrap-{}'.format(uuid.uuid4()),
+        Bucket='terraform-{}'.format(uuid.uuid4()),
         CreateBucketConfiguration={
             'LocationConstraint': '{}'.format(region)
         }
     )
+    b_name = re.search("\/\/([^.]+)", response['Location'])
+    if args.tag == True:
+        g_s3_client.put_bucket_tagging(
+            Bucket='{}'.format(b_name.group(1)),
+            Tagging={
+                'TagSet' : [
+                    {
+                        'Key': 'Managed',
+                        'Value': "Bootstrap.py"
+                    },
+                ]
+            }
+        )
     return response
 
 def create_table(region):
@@ -62,15 +76,20 @@ def create_table(region):
             break
         time.sleep(3) 
     print('Table created!\n')
+    if args.tag == True:
+        g_dynamo_client.tag_resource(
+            ResourceArn=check['Table']['TableArn'],
+            Tags=[
+                {
+                    'Key': 'Managed',
+                    'Value': 'Bootstrap.py'
+                }
+            ]
+        )
     return response
 
-
-# Logic here:
-# 1. Create S3 Bucket
-# 2. in S3 response, grab bucket name (since it's randomized)
-# 3. if -t/--tag is passed into script, tag S3 bucket with "Managed:Bootstrap"
 
 table = create_table(args.region)
 bucket = create_bucket(args.region)
 print("S3 Bucket: " + bucket["Location"])
-print("\nDynamoDB Table: " + table['TableDescription']['TableName'])
+print("DynamoDB Table: " + table['TableDescription']['TableName'])

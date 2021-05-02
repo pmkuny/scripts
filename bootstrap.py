@@ -45,7 +45,7 @@ def create_bucket(region):
         )
     return response
 
-def create_table(region):
+def create_table():
     print("Creating DynamoDB Lock Table...")
     response = g_dynamo_client.create_table(
         AttributeDefinitions=[
@@ -89,7 +89,7 @@ def create_table(region):
     return response
 
 
-table = create_table(args.region)
+table = create_table()
 bucket = create_bucket(args.region)
 print("S3 Bucket: " + bucket["Location"])
 print("DynamoDB Table: " + table['TableDescription']['TableName'])

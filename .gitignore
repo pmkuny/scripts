@@ -1,0 +1,3 @@
+dev_instance/*.pem
+venv
+dev_instance/.vagrant

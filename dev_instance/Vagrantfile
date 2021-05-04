@@ -1,0 +1,24 @@
+# Workaround: https://github.com/mitchellh/vagrant-aws/issues/566
+class Hash
+  def slice(*keep_keys)
+    h = {}
+    keep_keys.each { |key| h[key] = fetch(key) if has_key?(key) }
+    h
+  end unless Hash.method_defined?(:slice)
+  def except(*less_keys)
+    slice(*keys - less_keys)
+  end unless Hash.method_defined?(:except)
+end
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "dummy"
+    config.vm.provider :aws do |aws, override|
+        aws.instance_type = "t2.micro"
+        aws.ami = "ami-0cf6f5c8a62fa5da6"
+        aws.region = "us-west-2"
+        aws.region_config  "us-west-2", :ami => "ami-0cf6f5c8a62fa5da6"
+        aws.keypair_name = "vagrant"
+        override.ssh.username = "centos"
+        override.ssh.private_key_path = "./vagrant.pem"
+    end
+end

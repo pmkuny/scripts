@@ -22,6 +22,7 @@ CLI: aws ec2 describe-instances --filters Name=tag:scheduler,Values='true' --que
 '''
 
 def get_instance_ids():
+    instance_ids = []
     ec2_client = session.client("ec2")
     paginator = ec2_client.get_paginator('describe_instances')
     iterator = paginator.paginate(
@@ -38,6 +39,7 @@ def get_instance_ids():
     for page in iterator:
         for item in page['Reservations']:
             for Instance in item['Instances']:
-                print(Instance['InstanceId'])
+                instance_ids.append(Instance['InstanceId'])
+                print(Instance['InstanceId'] + " added to list")
 
 get_instance_ids()

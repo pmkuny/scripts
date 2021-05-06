@@ -1,8 +1,50 @@
 ---
-  - name: update
+  - name: bootstrap
     hosts: localhost
+    connection: local
     tasks:
-      - name: update all
-        yum:
+      - name: Update System
+        yum: 
           name: "*"
           state: latest
+      - name: Install tools
+        yum:
+          name: "{{ packages }}"
+        vars:
+          packages:
+            - git
+            - python3-pip
+    
+      - name: Ensure wheel group
+        group:
+          name: wheel
+          state: present
+
+      - name: Create User
+        user:
+          name: kunyp
+          groups: wheel
+          expires: -1
+
+      - name: Manage Key
+        authorized_key:
+          user: kunyp
+          state: present
+          key: "{{ ssh_key }}"
+          manage_dir: true
+      
+      - name: Update Sudoers
+        lineinfile:
+          dest: /etc/sudoers.d/wheel
+          state: present
+          create: true
+          line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+      
+      - name: Sudoers File Permissions
+        file:
+          path: /etc/sudoers.d/wheel
+          owner: root
+          group: root
+          mode: '0600'
+
+

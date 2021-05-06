@@ -5,6 +5,9 @@ import boto3
 import boto3.session
 
 '''
+We use CloudWatch Event Bridge to control the times that fire off a stop_instances() and start_instances()
+
+'''
 Session: Creates a new boto3 session based on the session configuration
 requirements.
 
@@ -41,5 +44,18 @@ def get_instance_ids():
             for Instance in item['Instances']:
                 instance_ids.append(Instance['InstanceId'])
                 print(Instance['InstanceId'] + " added to list")
+    
+    return instance_ids
 
-get_instance_ids()
+def stop_instances(instance_ids):
+    for instance in instance_ids:
+        ec2 = session.client("ec2")
+        response = ec2.stop_instances(InstanceIds=[instance])
+        print(instance + " stopping response: " + response['StoppingInstances']['CurrentState']['Name'] )
+    
+
+
+
+
+instance_ids = get_instance_ids()
+stop_instances(instance_ids)

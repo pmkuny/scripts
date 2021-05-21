@@ -20,7 +20,15 @@ g_dynamo_client = boto3.client("dynamodb")
 parser = argparse.ArgumentParser(description='Bootstrap Terraform Remote Backends')
 parser.add_argument("region")
 parser.add_argument("--tag", "-t", help="Tags bootstrapped resources as being managed by Bootstrap", action="store_true")
+parser.add_argument("--pet","-p", help="Generate pet names and exit")
 args = parser.parse_args()
+
+def generate_pet(num):
+    i = 0
+    while i > num:
+        response = 'terraform-{}'.format(uuid.uuid4())
+        yield response
+        i += 1        
 
 def create_bucket(region):
     response = g_s3_client.create_bucket(
@@ -89,7 +97,11 @@ def create_table():
     return response
 
 
-table = create_table()
-bucket = create_bucket(args.region)
-print("S3 Bucket: " + bucket["Location"])
-print("DynamoDB Table: " + table['TableDescription']['TableName'])
+if args.pet == True:
+    if len(args.pet) > 0:
+        print(generate_pet(args.pet))
+        exit()
+#    table = create_table()
+#    bucket = create_bucket(args.region)
+#    print("S3 Bucket: " + bucket["Location"])
+#    print("DynamoDB Table: " + table['TableDescription']['TableName'])
